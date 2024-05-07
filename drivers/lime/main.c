@@ -112,7 +112,7 @@ int init_module (void)
     return init();
 }
 
-static int init() {
+static int init(void) {
     struct resource *p;
     int err = 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
@@ -278,12 +278,14 @@ static void write_range(struct resource * res) {
              * If we need to compute the digest or compress the output
              * take a snapshot of the page. Otherwise save some cycles.
              */
+            preempt_enable();
             if (no_overlap) {
                 copy_page(vpage, v);
                 s = write_vaddr(vpage, is);
             } else {
                 s = write_vaddr(v, is);
             }
+            preempt_disable();
 #ifdef LIME_USE_KMAP_ATOMIC
             kunmap_atomic(v);
 #else

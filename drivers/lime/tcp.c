@@ -21,9 +21,12 @@ extern int localhostonly;
 static struct socket *control;
 static struct socket *accept;
 
-int setup_tcp() {
+int setup_tcp(void) {
     struct sockaddr_in saddr;
     int r;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,8,0)
+    int opt;
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,2,0)
     r = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &control);
@@ -49,7 +52,7 @@ int setup_tcp() {
        }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,8,0)
-    int opt = 1;
+    opt = 1;
     r = kernel_setsockopt(control, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof (opt));
     if (r < 0) {
         DBG("Error setting socket options");
@@ -95,7 +98,7 @@ int setup_tcp() {
     return 0;
 }
 
-void cleanup_tcp() {
+void cleanup_tcp(void) {
     if (accept) {
         kernel_sock_shutdown(accept, SHUT_RDWR);
         sock_release(accept);
